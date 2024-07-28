@@ -1,7 +1,10 @@
 import { asyncHandler } from "../utils/asynchandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -227,10 +230,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   res
     .status(200)
-    .json(new ApiResponse(
-        200, 
-        req.user,
-        "User fetched successfully"));
+    .json(new ApiResponse(200, req.user, "User fetched successfully"));
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -269,16 +269,13 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Error while uploading avatar");
   }
 
-  const user = await User.findById(
-    req.user._id
-  ).select("avatar -password")
+  const user = await User.findById(req.user._id).select("avatar -password");
 
   if (!user) {
     throw new ApiError(404, "User not found");
   }
 
-  const oldAvatarUrl = user.avatar
-
+  const oldAvatarUrl = user.avatar;
 
   const updatedUser = await User.findByIdAndUpdate(
     req.user?._id,
@@ -290,18 +287,14 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     { new: true }
   ).select("-password");
 
-
-  
-  if(oldAvatarUrl) {
-    await deleteFromCloudinary(oldAvatarUrl)
+  if (oldAvatarUrl) {
+    await deleteFromCloudinary(oldAvatarUrl);
   }
 
   return res
     .status(200)
     .json(new ApiResponse(200, updatedUser, "Avatar updated Successfully"));
 });
-
-
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
   const coverImageLocalPath = req.file?.path;
@@ -312,15 +305,15 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
-  const user = await User.findById(
-    req.user?._id
-  ).select("coverImage -password")
+  const user = await User.findById(req.user?._id).select(
+    "coverImage -password"
+  );
 
-  if(!user) {
-    throw new ApiError(404, "User not found")
+  if (!user) {
+    throw new ApiError(404, "User not found");
   }
 
-  const oldCoverImage = user.coverImage
+  const oldCoverImage = user.coverImage;
 
   if (!coverImage.url) {
     throw new ApiError(400, "Error while uploading coverImage");
@@ -336,14 +329,104 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     { new: true }
   ).select("-password");
 
-  
-  if(oldCoverImage){
-    await deleteFromCloudinary(oldCoverImage)
+  if (oldCoverImage) {
+    await deleteFromCloudinary(oldCoverImage);
   }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, updatedUser, "Cover Image updated Successfully"));
+    .json(
+      new ApiResponse(200, updatedUser, "Cover Image updated Successfully")
+    );
+});
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  // fetch the channel usernmae from url
+
+  const { username } = req.params;
+
+  // if username is not present throw an error
+
+  if (!username?.trim()) {
+    throw new ApiError(400, "Invalid username");
+  }
+
+  // use aggregation function to find user channel subscribers
+  const channel = await User.aggregate([
+    // match to find user by username it is to link database with the models
+
+    {
+      $match: {
+        username: username?.toLowerCase(),
+      },
+    },
+
+    // lookup to find the subscribers and subscribedto users
+
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+
+    // addFields to find out numbers of subscribers and subscribedTo users
+
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+        subscribedToCount: {
+          $size: "$subscribedTo",
+        },
+
+        // cond is used to determine whether user is subscribed or not
+        // in is used to determine value of users in botharray and object
+
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      // project is used to show the user information which is demanded
+
+      $project: {
+        username: 1,
+        fullName: 1,
+        email: 1,
+        avatar: 1,
+        coverImage: 1,
+        subscribersCount: 1,
+        subscribedToCount: 1,
+        isSubscribed: 1,
+      },
+    },
+  ])
+
+  if(!channel?.length) {
+    throw new ApiError(404, "Channel not found");
+  }
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, channel[0], "User channel fetched successfully"));
+
 });
 
 export {
@@ -356,4 +439,5 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
+  getUserChannelProfile,
 };
