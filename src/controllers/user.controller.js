@@ -417,16 +417,73 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         isSubscribed: 1,
       },
     },
-  ])
+  ]);
 
-  if(!channel?.length) {
+  if (!channel?.length) {
     throw new ApiError(404, "Channel not found");
   }
 
   return res
-  .status(200)
-  .json(new ApiResponse(200, channel[0], "User channel fetched successfully"));
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
+});
 
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    // we get the string in req.user._id it is mongoose which converts it into an objectId in mongodb
+    // we are not directly adding the id insted we are using new mongoose cuz in pipelines mongoose donot convert the string id into mongodb object
+
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "User watch history fetched successfully")
+    )
 });
 
 export {
@@ -440,4 +497,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
+  getWatchHistory,
 };
