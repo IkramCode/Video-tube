@@ -199,10 +199,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(
-      200, 
-      newVideo, 
-      "Video published successfully"));
+    .json(new ApiResponse(200, newVideo, "Video published successfully"));
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
@@ -226,10 +223,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(
-        200, 
-        video, 
-        "Video fetched successfully"));
+      .json(new ApiResponse(200, video, "Video fetched successfully"));
   } catch (error) {
     throw new ApiError(500, "An error occurred while fetching the video");
   }
@@ -292,19 +286,69 @@ const updateVideo = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(
-      200, 
-      video, 
-      "Video updated successfully"));
+    .json(new ApiResponse(200, video, "Video updated successfully"));
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: delete video
+
+  if (!videoId || !isValidObjectId(videoId)) {
+    throw new ApiError(400, "Video ID is missing or invalid");
+  }
+  try {
+    const result = await Video.deleteOne(videoId);
+
+    if (result.deletedCount === 0) {
+      throw new ApiError(404, "Video not found");
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Video deleted successfully"));
+  } catch (error) {
+    throw new ApiError(500, "An error occurred while deleting the video");
+  }
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+
+  if (!videoId || !isValidObjectId(videoId)) {
+    throw new ApiError(400, "Video ID is missing or invalid");
+  }
+
+  try {
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+      throw new ApiError(404, "Video not found");
+    }
+
+    const updatedVideo = await Video.findByIdAndUpdate(
+      videoId,
+      {
+        $set: {
+          isPublished: !video.isPublished,
+        },
+      },
+      { new: true }
+    );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          updatedVideo,
+          updatedVideo.isPublished
+            ? "Video published successfully"
+            : "Video unpublished successfully"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(500, "An error occurred while toggling publish status");
+  }
 });
 
 export {
