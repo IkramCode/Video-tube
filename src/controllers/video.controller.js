@@ -140,23 +140,41 @@ const publishAVideo = asyncHandler(async (req, res) => {
   // TODO: get video, upload to cloudinary, create video
 
   /* How i did this ?
-  It was preety simple as i already have built utils for cloudinary which handels video and pics so i just called it here and handled the errors and response 
+  It was pretty simple as i already have built utils for cloudinary which handels video and pics so i just called it here and handled the errors and response 
   */
 
   if ([title, description].some((field) => field?.trim() === "")) {
     throw new ApiError(400, "Title or description is missing");
   }
 
-  const videoLocalPath = req.file?.videoLocalPath;
+  const videoLocalPath = req.files?.video?.[0]?.path;
+  const thumbnailLocalPath = req.files?.thumbnail?.[0]?.path;
 
   if (!videoLocalPath) {
     throw new ApiError(400, "Video file is missing");
   }
 
-  const video = await uploadOnCloudinary(videoLocalPath);
+  if (!thumbnailLocalPath) {
+    throw new ApiError(400, "Thumbnail file is missing");
+  }
 
-  if (!video.url) {
-    throw new ApiError(400, "Error while uploading video");
+  let videoUploadResponse, thumbnailUploadResponse;
+
+  try {
+    [videoUploadResponse, thumbnailUploadResponse] = await Promise.all([
+      uploadOnCloudinary(videoLocalPath),
+      uploadOnCloudinary(thumbnailLocalPath),
+    ]);
+
+    if (!videoUploadResponse.url) {
+      throw new ApiError(400, "Error while uploading video");
+    }
+
+    if (!thumbnailUploadResponse.url) {
+      throw new ApiError(400, "Error while uploading thumbnail");
+    }
+  } catch (error) {
+    throw new ApiError(500, "Error uploading files");
   }
 
   const user = await User.findById(req.user._id).select("video -password");
@@ -165,9 +183,26 @@ const publishAVideo = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
+  const newVideo = new Video({
+    videoFile: videoUploadResponse.url,
+    thumbnail: thumbnailUploadResponse.url,
+    title,
+    description,
+    owner: req.user._id,
+  });
+
+  try {
+    await newVideo.save();
+  } catch (error) {
+    throw new ApiError(500, "Error saving video");
+  }
+
   return res
     .status(200)
-    .json(new ApiResponse(200, video, "Video published successfully"));
+    .json(new ApiResponse(
+      200, 
+      newVideo, 
+      "Video published successfully"));
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
@@ -191,9 +226,10 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-
-      .json(new ApiResponse(200, video, "Video fetched successfully"));
-      
+      .json(new ApiResponse(
+        200, 
+        video, 
+        "Video fetched successfully"));
   } catch (error) {
     throw new ApiError(500, "An error occurred while fetching the video");
   }
@@ -201,7 +237,65 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+  const { title, description } = req.body;
   //TODO: update video details like title, description, thumbnail
+
+  /* 
+  It was also almost similar to what i di in user to update avatar 
+  i already built cloudinary functionalities
+  */
+
+  if (!title || !description) {
+    throw new ApiError(400, "Title or description not provided");
+  }
+
+  const thumbnailLocalPath = req.files?.thumbnail?.[0]?.path;
+
+  if (!thumbnailLocalPath) {
+    throw new ApiError(400, "Thumbnail is not available");
+  }
+
+  const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+
+  if (!thumbnail.url) {
+    throw new ApiError(400, "Error while uploading thumbnail");
+  }
+
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+
+  const oldThumbnail = video.thumbnail;
+
+  try {
+    await Video.findByIdAndUpdate(
+      videoId,
+      {
+        $set: {
+          title,
+          description,
+          thumbnail: thumbnailUrl,
+        },
+      },
+      { new: true }
+    );
+  } catch (error) {
+    throw new ApiError(500, "Error updating video");
+  }
+
+  await video.save();
+
+  if (oldThumbnail) {
+    await deleteFromCloudinary(oldThumbnail);
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(
+      200, 
+      video, 
+      "Video updated successfully"));
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
