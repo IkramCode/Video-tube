@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { fetchVideoById } from "../utils/FetchVideo.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   try {
@@ -104,13 +105,31 @@ const getAllVideos = asyncHandler(async (req, res) => {
       },
     ];
 
+    // added total count of pagination for client / frontend to get meta data of pages
+
+    const totalCount = await Video.countDocuments({
+      $match: searchQuery.length > 0 ? { $and: searchQuery } : {},
+    });
+
     const videos = await Video.aggregate(aggregateQuery)
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber);
 
-    return res
-      .status(200)
-      .json(new ApiResponse(200, videos, "Videos fetched successfully"));
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          videos,
+          pagination: {
+            page: pageNumber,
+            limit: limitNumber,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limitNumber),
+          },
+        },
+        "Videos fetched successfully"
+      )
+    );
   } catch (error) {
     throw new ApiError(500, "Error fetching videos");
   }
@@ -119,6 +138,10 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
   // TODO: get video, upload to cloudinary, create video
+
+  /* How i did this ?
+  It was preety simple as i already have built utils for cloudinary which handels video and pics so i just called it here and handled the errors and response 
+  */
 
   if ([title, description].some((field) => field?.trim() === "")) {
     throw new ApiError(400, "Title or description is missing");
@@ -150,6 +173,30 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: get video by id
+
+  /* How i did this ?   
+  I built a new utils to fetch videos as i might need it further and used  isValideObjectId to check if id is valid 
+  */
+
+  if (!videoId || !isValidObjectId(videoId)) {
+    throw new ApiError(400, "Video ID is missing or invalid");
+  }
+
+  try {
+    const video = await fetchVideoById(videoId);
+
+    if (!video) {
+      throw new ApiError(404, "Video not found");
+    }
+
+    return res
+      .status(200)
+
+      .json(new ApiResponse(200, video, "Video fetched successfully"));
+      
+  } catch (error) {
+    throw new ApiError(500, "An error occurred while fetching the video");
+  }
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
