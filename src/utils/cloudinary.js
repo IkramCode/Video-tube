@@ -18,6 +18,9 @@ const uploadOnCloudinary = async (localFilePath) => {
 
     if (fs.existsSync(localFilePath)) {
       fs.unlinkSync(localFilePath);
+      console.log("Local file deleted:", localFilePath);
+    } else {
+      console.warn("Local file not found for deletion:", localFilePath);
     }
 
     return response;
