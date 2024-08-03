@@ -13,26 +13,50 @@ const getVideoComments = asyncHandler(async (req, res) => {
   let pageNumber = parseInt(page, 1);
   let limitNumber = parseInt(limit, 10);
 
+  if (isNaN(pageNumber) || pageNumber < 1) {
+    pageNumber = 1;
+  }
+
+  if (isNaN(limitNumber) || limitNumber < 1) {
+    limitNumber = 10;
+  }
+
   if (!videoId || !isValidObjectId(videoId)) {
     throw new ApiError(400, "Video ID is missing or invalid");
   }
 
+  // const video = await Video.findById(videoId);
+
   try {
-    const comments = await Comment.find({ videoId })
+    console.log("Querying comments with video ID:", videoId);
+    const comments = await Comment.find({ video : videoId })
+      .sort({ createdAt: -1 })
       .skip((pageNumber - 1) * limitNumber)
-      .limit(limitNumber);
+      .limit(limitNumber)
+      .populate("owner", "username avatar");
+    console.log("comments", comments);
 
-    const totalComments = await Comment.countDocuments({ videoId });
-    const totalPages = Math.ceil(totalComments / limitNumber);
+    const numberOfComments = await Comment.countDocuments(videoId);
+    console.log("Number of comments:", numberOfComments);
 
-    res.json({
-      page: pageNumber,
-      totalPages,
-      limit: limitNumber,
-      totalComments,
-      comments,
-    });
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          comments,
+          pagination: {
+            page: pageNumber,
+            limit: limitNumber,
+            totalCount: numberOfComments,
+            totalPages: Math.ceil(numberOfComments / limitNumber),
+          },
+        },
+        "Comments fetched successfully"
+      )
+    );
   } catch (error) {
+    console.log("error", error);
+
     throw new ApiError(500, "Error fetching comments");
   }
 });
@@ -58,19 +82,17 @@ const addComment = asyncHandler(async (req, res) => {
   }
 
   try {
-    const comment = new Comment({
-      videoId: new mongoose.Types.ObjectId(videoId),
-      userId: req.user._id,
+    const comment = await Comment.create({
       content: content,
+      owner: req.user._id,
+      video : videoId,
     });
-
-    await comment.save();
 
     return res
       .status(200)
-      .json(new ApiResponse(200, comment, "Comment added successfully"));
+      .json(new ApiResponse(200, comment, "Comment created successfully"));
   } catch (error) {
-    throw new ApiError(500, "An error occurred while adding the comment");
+    throw new ApiError(500, "Error creating comment");
   }
 });
 
