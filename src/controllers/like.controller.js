@@ -210,8 +210,8 @@ const getLikedVideos = asyncHandler(async (req, res) => {
         },
       },
       {
-        $unwind : "$Liked_Videos",
-      }
+        $unwind: "$Liked_Videos",
+      },
     ]);
 
     return res
@@ -222,11 +222,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
           { likedVideos }
         )
       );
-      console.log("likedVideos", likedVideos);
-      
   } catch (error) {
-    console.log("Error fetching liked videos:", error);
-    
     throw new ApiError(500, "An error occurred while fetching liked videos");
   }
 });

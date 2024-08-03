@@ -28,16 +28,13 @@ const getVideoComments = asyncHandler(async (req, res) => {
   // const video = await Video.findById(videoId);
 
   try {
-    console.log("Querying comments with video ID:", videoId);
     const comments = await Comment.find({ video: videoId })
       .sort({ createdAt: -1 })
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
       .populate("owner", "username avatar");
-    console.log("comments", comments);
 
     const numberOfComments = await Comment.countDocuments(videoId);
-    console.log("Number of comments:", numberOfComments);
 
     return res.status(200).json(
       new ApiResponse(
@@ -55,8 +52,6 @@ const getVideoComments = asyncHandler(async (req, res) => {
       )
     );
   } catch (error) {
-    console.log("error", error);
-
     throw new ApiError(500, "Error fetching comments");
   }
 });
