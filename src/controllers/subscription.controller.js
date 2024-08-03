@@ -9,40 +9,41 @@ const toggleSubscription = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
   // TODO: toggle subscription
 
+  if (!channelId || !isValidObjectId(channelId)) {
+    throw new ApiError(400, "Invalid channel ID");
+  }
+
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
   try {
-    if (!channelId || !isValidObjectId(channelId)) {
-      throw new ApiError(400, "Invalid channel ID");
-    }
-  
-    const user = await User.findById(req.user._id);
-  
-    if (!user.trim() === "") {
-      throw new ApiError(401, "Unauthorized User ID");
-    }
-  
-    const isSubscribed = user.subscriptions.includes(channelId);
-  
-    if (isSubscribed) {
-      user.subscriptions = user.subscriptions.filter(
-        (sub) => sub.toString() !== channelId
-      );
+    const subscription = await Subscription.findOne({
+      subscriber: user._id,
+      channel: channelId,
+    });
+
+    if (!subscription) {
+      await Subscription.create({
+        subscriber: user._id,
+        channel: channelId,
+      });
     } else {
-      user.subscriptions.push(channelId);
+      await subscription.deleteOne();
     }
-  
-    await user.save();
-  
+
     return res
       .status(200)
       .json(
         new ApiResponse(
-          200, 
-          {}, 
-          isSubscribed ? "Unsubscribed" : "Subscribed"
-      )
+          200,
+          subscription ? "Unsubscribed successfully" : "Subscribed successfully"
+        )
       );
   } catch (error) {
-    throw new ApiError(500 , "Error in subscription", error);
+    throw new ApiError(500, "An error occurred while toggling subscription");
   }
 });
 
@@ -50,11 +51,93 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
 
+  if (!channelId || !isValidObjectId(channelId)) {
+    throw new ApiError(400, "Invalid channel ID");
+  }
+
+  try {
+    const subscribers = await Subscription.aggregate([
+      {
+        $match: {
+          channel: new mongoose.Types.ObjectId(channelId),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "subscriber",
+          foreignField: "_id",
+          as: "subscriber",
+        },
+      },
+      {
+        $unwind: "$subscriber",
+      },
+    ]);
+
+    const subscribersCount = subscribers.length;
+    const subscribersList = subscribers.map((subscriber) => {
+      return subscriber.subscriber;
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          subscribersList,
+          subscribersCount,
+        },
+        "Subscribers fetched successfully"
+      )
+    );
+  } catch (error) {
+    throw new ApiError(500, "An error occurred while fetching subscribers");
+  }
 });
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
+
+  if (!subscriberId || !isValidObjectId(subscriberId)) {
+    throw new ApiError(400, "Invalid subscriber ID");
+  }
+
+  try {
+    const subscribedChannels = await Subscription.aggregate([
+      {
+        $match: {
+          subscriber: new mongoose.Types.ObjectId(subscriberId),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "channel",
+          foreignField: "_id",
+          as: "channel",
+        },
+      },
+      {
+        $unwind: "$channel",
+      },
+    ]);
+
+    const channelsCount = subscribedChannels.length;
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          subscribedChannels,
+          channelsCount,
+        },
+        "Channels fetched successfully"
+      )
+    );
+  } catch (error) {
+    throw new ApiError(500, "An error occurred while fetching channels");
+  }
 });
 
 export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
