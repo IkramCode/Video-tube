@@ -29,7 +29,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
   try {
     console.log("Querying comments with video ID:", videoId);
-    const comments = await Comment.find({ video : videoId })
+    const comments = await Comment.find({ video: videoId })
       .sort({ createdAt: -1 })
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
@@ -85,7 +85,7 @@ const addComment = asyncHandler(async (req, res) => {
     const comment = await Comment.create({
       content: content,
       owner: req.user._id,
-      video : videoId,
+      video: videoId,
     });
 
     return res
@@ -111,27 +111,45 @@ const updateComment = asyncHandler(async (req, res) => {
 
   try {
     const comment = await Comment.findByIdAndUpdate(
-      commentId , 
+      commentId,
       {
         $set: {
-          content: content
+          content: content,
         },
       },
       { new: true }
-    )
+    );
 
     return res
-    .status(200)
-    .json(new ApiResponse(200, comment, "Comment updated successfully"));
-
+      .status(200)
+      .json(new ApiResponse(200, comment, "Comment updated successfully"));
   } catch (error) {
     throw new ApiError(500, "Error updating comment");
   }
-
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
   // TODO: delete a comment
+
+  const { commentId } = req.params;
+
+  if (!commentId || !isValidObjectId(commentId)) {
+    throw new ApiError(400, "Comment ID is missing or invalid");
+  }
+
+  try {
+    const comment = await Comment.deleteOne({ _id: commentId });
+
+    if (comment.deletedCount === 0) {
+      throw new ApiError(404, "Comment not found");
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Comment deleted successfully"));
+  } catch (error) {
+    throw new ApiError(500, "An error occurred while deleting the comment");
+  }
 });
 
 export { getVideoComments, addComment, updateComment, deleteComment };
