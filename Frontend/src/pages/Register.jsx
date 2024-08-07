@@ -1,23 +1,53 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
+import axiosInstance from "../api/axiosInstance";
 
 const Register = () => {
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm();
 
-  const onSubmit = (data) => {
-    console.log(data);
+  const onSubmit = async (data, event) => {
+    event.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData();
+
+    formData.append("username", data.username);
+    formData.append("fullName", data.fullName);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+
+    // Handle files
+    if (data.coverImage && data.coverImage[0]) {
+      formData.append("coverImage", data.coverImage[0]);
+    }
+    if (data.avatar && data.avatar[0]) {
+      formData.append("avatar", data.avatar[0]);
+    }
+
+    try {
+      const response = await axiosInstance.post("/users/register", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log(response.data);
+      // Handle success
+    } catch (error) {
+      console.error(error);
+      // Handle error
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
         <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={(e) => handleSubmit((data) => onSubmit(data, e))(e)}>
           <div className="mb-4">
             <label className="block text-gray-700">Username</label>
             <input
@@ -34,10 +64,10 @@ const Register = () => {
             <input
               type="text"
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              {...register("fullname", { required: "Full name is required" })}
+              {...register("fullName", { required: "Full name is required" })}
             />
-            {errors.fullname && (
-              <p className="text-red-500 text-sm">{errors.fullname.message}</p>
+            {errors.fullName && (
+              <p className="text-red-500 text-sm">{errors.fullName.message}</p>
             )}
           </div>
           <div className="mb-4">
@@ -67,9 +97,7 @@ const Register = () => {
             <input
               type="file"
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              {...register("coverImage", {
-                required: "Cover image is required",
-              })}
+              {...register("coverImage")}
             />
             {errors.coverImage && (
               <p className="text-red-500 text-sm">
@@ -82,7 +110,7 @@ const Register = () => {
             <input
               type="file"
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              {...register("avatar", { required: "Avatar is required" })}
+              {...register("avatar")}
             />
             {errors.avatar && (
               <p className="text-red-500 text-sm">{errors.avatar.message}</p>
