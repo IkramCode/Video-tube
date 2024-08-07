@@ -8,11 +8,10 @@ const Register = () => {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm();
 
-  const onSubmit = async (data, event) => {
-    event.preventDefault(); // Prevent default form submission
+  const onSubmit = async (data) => {
+    console.log("onSubmit", data);
 
     const formData = new FormData();
 
@@ -21,13 +20,14 @@ const Register = () => {
     formData.append("email", data.email);
     formData.append("password", data.password);
 
-    // Handle files
     if (data.coverImage && data.coverImage[0]) {
       formData.append("coverImage", data.coverImage[0]);
     }
     if (data.avatar && data.avatar[0]) {
       formData.append("avatar", data.avatar[0]);
     }
+
+    console.log("formData", formData);
 
     try {
       const response = await axiosInstance.post("/users/register", formData, {
@@ -36,10 +36,8 @@ const Register = () => {
         },
       });
       console.log(response.data);
-      // Handle success
     } catch (error) {
       console.error(error);
-      // Handle error
     }
   };
 
@@ -47,7 +45,7 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
         <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
-        <form onSubmit={(e) => handleSubmit((data) => onSubmit(data, e))(e)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label className="block text-gray-700">Username</label>
             <input
