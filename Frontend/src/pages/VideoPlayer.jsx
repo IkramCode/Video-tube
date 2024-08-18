@@ -31,7 +31,7 @@ export default function VideoPlayer() {
           <video
             src={video.videoFile}
             controls
-            className="w-full h-64 object-cover rounded-t-lg"
+            className="w-full max-h-[80vh] object-contain rounded-t-lg"
           ></video>
           <div className="absolute top-2 right-2 bg-white text-gray-800 px-2 py-1 rounded-lg text-sm shadow-md">
             {video.views} views
@@ -41,7 +41,7 @@ export default function VideoPlayer() {
           <h1 className="text-3xl font-bold mb-2">{video.title}</h1>
           <div className="flex items-center mb-4">
             <img
-              src={video.owner?.avatar || "/default-avatar.png"}
+              src={video.owner?.avatar}
               alt={video.owner?.username || "Unknown User"}
               className="w-16 h-16 rounded-full mr-4 border-2 border-gray-300 object-cover"
             />
@@ -50,7 +50,7 @@ export default function VideoPlayer() {
                 {video.owner?.username || "Unknown User"}
               </p>
               <p className="text-gray-600 text-sm">
-                {new Date(video.createdAt).toLocaleDateString()}
+                video uploaded on {new Date(video.createdAt).toLocaleString()}
               </p>
             </div>
           </div>
