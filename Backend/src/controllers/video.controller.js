@@ -76,7 +76,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
           from: "users",
           localField: "owner",
           foreignField: "_id",
-          as: "user",
+          as: "owner",
           pipeline: [
             {
               $project: {
@@ -90,7 +90,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
       {
         $addFields: {
           owner: {
-            $first: "$user",
+            $first: "$owner",
           },
         },
       },
@@ -208,24 +208,62 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 
-  //TODO: get video by id
-
   if (!videoId || !isValidObjectId(videoId)) {
     throw new ApiError(400, "Video ID is missing or invalid");
   }
 
   try {
-    const video = await Video.findById(videoId);
+    const video = await Video.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(videoId),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+          pipeline: [
+            {
+              $project: {
+                username: 1,
+                avatar: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: "$owner",
+          preserveNullAndEmptyArrays: true, 
+        },
+      },
+      {
+        $project: {
+          title: 1,
+          description: 1,
+          videoFile: 1,
+          thumbnail: 1,
+          duration: 1,
+          views: 1,
+          createdAt: 1,
+          owner: 1,
+        },
+      },
+    ]);
 
-    if (!video) {
+    if (video.length === 0) {
       throw new ApiError(404, "Video not found");
     }
 
     return res
       .status(200)
-      .json(new ApiResponse(200, video, "Video fetched successfully"));
+      .json(new ApiResponse(200, video[0], "Video fetched successfully"));
   } catch (error) {
-    throw new ApiError(500, "An error occurred while fetching the video");
+    throw new ApiError(500, "Error fetching video");
   }
 });
 
