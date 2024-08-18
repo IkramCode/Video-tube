@@ -1,32 +1,34 @@
 import React from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { login } from "../Features/userSlice";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
+  const { isLoading, isError, message } = useSelector((state) => state.user);
+
   const onSubmit = async (data) => {
-    console.log(data);
-
-    const formData = new FormData();
-    formData.append("email", data.email);
-    formData.append("password", data.password);
-
     try {
-      const response = await axiosInstance.post("/users/login", formData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      console.log(response.data);
+      dispatch(
+        login(data)
+      );
+      const response = await axiosInstance.post("/users/login", data);
+      console.log("Login response:", response.data);
     } catch (error) {
-      console.log("Error", error);
+      console.error("Login error:", error);
     }
+
+    navigate("/videos");
   };
 
   return (
@@ -56,11 +58,13 @@ const Login = () => {
               <p className="text-red-500 text-sm">{errors.password.message}</p>
             )}
           </div>
+          {isError && <p className="text-red-500 text-sm">{message}</p>}
           <button
             type="submit"
             className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+            disabled={isLoading}
           >
-            Login
+            {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
         <Link to="/register" className="text-blue-500 mt-4 block text-center">

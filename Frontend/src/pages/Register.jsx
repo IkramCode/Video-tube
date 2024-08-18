@@ -2,6 +2,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const {
@@ -9,7 +10,7 @@ const Register = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
-
+  const navigate = useNavigate();
   const onSubmit = async (data) => {
     console.log("onSubmit", data);
 
@@ -30,15 +31,13 @@ const Register = () => {
     console.log("formData", formData);
 
     try {
-      const response = await axiosInstance.post("/users/register", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      console.log(response.data);
+      const response = await axiosInstance.post("/users/register", formData,);
+      console.log("register response", response.data);
     } catch (error) {
       console.error(error);
     }
+
+    navigate("/videos");
   };
 
   return (

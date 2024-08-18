@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Home = () => {
+const Landingpage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="bg-gray-800 p-4">
@@ -20,4 +20,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Landingpage;
