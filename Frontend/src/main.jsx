@@ -16,17 +16,20 @@ import store from "./app/store.js";
 import Videos from "./pages/Videos.jsx";
 import Homepage from "./pages/Homepage.jsx";
 import VideoPlayer from "./pages/VideoPlayer.jsx";
+import Layout from "./Layout.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<App />}>
-      <Route path="" element={<Landingpage />} />
+    <>
       <Route path="login" element={<Login />} />
       <Route path="register" element={<Register />} />
-      <Route path="homepage" element={<Homepage />} />
-      <Route path="videos" element={<Videos />} />
-      <Route path="video/:id" element={<VideoPlayer />} />
-    </Route>
+        <Route path="" element={<Landingpage />} />
+      <Route path="/" element={<Layout />}>
+        <Route path="homepage" element={<Homepage />} />
+        <Route path="videos" element={<Videos />} />
+        <Route path="video/:id" element={<VideoPlayer />} />
+      </Route>
+    </>
   )
 );
 

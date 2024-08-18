@@ -13,7 +13,7 @@ const Landingpage = () => {
           </div>
         </div>
       </nav>
-      <div className="flex-grow flex items-center justify-center bg-gray-100">
+      <div className="flex-grow flex items-center justify-center bg-slate-700 text-white">
         <h1 className="text-4xl font-bold">Welcome to VideoTube</h1>
       </div>
     </div>

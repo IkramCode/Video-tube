@@ -28,7 +28,7 @@ const Login = () => {
       console.error("Login error:", error);
     }
 
-    navigate("/videos");
+    navigate("/homepage");
   };
 
   return (
