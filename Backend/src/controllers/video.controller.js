@@ -238,7 +238,7 @@ const getVideoById = asyncHandler(async (req, res) => {
       {
         $unwind: {
           path: "$owner",
-          preserveNullAndEmptyArrays: true, 
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
@@ -269,14 +269,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-
   const { title, description } = req.body;
-  //TODO: update video details like title, description, thumbnail
-
-  /* 
-  It was also almost similar to what i di in user to update avatar 
-  i already built cloudinary functionalities
-  */
 
   if (!title || !description) {
     throw new ApiError(400, "Title or description not provided");
@@ -307,29 +300,29 @@ const updateVideo = asyncHandler(async (req, res) => {
 
   const oldThumbnail = video.thumbnail;
 
+  const updateData = {
+    title,
+    description,
+    thumbnail: thumbnail.url,
+  };
+
   try {
-    await Video.findByIdAndUpdate(
+    const updatedVideo = await Video.findByIdAndUpdate(
       videoId,
-      {
-        $set: {
-          title,
-          description,
-          thumbnail: thumbnail?.url,
-        },
-      },
+      { $set: updateData },
       { new: true }
     );
+
+    if (oldThumbnail) {
+      await deleteFromCloudinary(oldThumbnail);
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, updatedVideo, "Video updated successfully"));
   } catch (error) {
     throw new ApiError(500, "Error updating video");
   }
-
-  if (oldThumbnail) {
-    await deleteFromCloudinary(oldThumbnail);
-  }
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, video, "Video updated successfully"));
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {

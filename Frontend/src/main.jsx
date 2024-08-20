@@ -12,11 +12,13 @@ import Register from "./pages/Register.jsx";
 import Landingpage from "./pages/Landingpage.jsx";
 import { Provider } from "react-redux";
 import store from "./app/store.js";
-import Videos from "./pages/Videos.jsx";
+import UploadVideo from "./pages/Upload-video.jsx";
 import Homepage from "./pages/Homepage.jsx";
 import VideoPlayer from "./pages/VideoPlayer.jsx";
 import Layout from "./Layout.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import Tweet from "./pages/Tweet.jsx";
+import EditVideo from "./pages/Edit-video.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -26,9 +28,10 @@ const router = createBrowserRouter(
       <Route path="" element={<Landingpage />} />
       <Route path="/" element={<Layout />}>
         <Route path="homepage" element={<Homepage />} />
-        <Route path="videos" element={<Videos />} />
+        <Route path="/upload-a-video" element={<UploadVideo />} />
         <Route path="video/:id" element={<VideoPlayer />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="edit-video/:videoId" element={<EditVideo />} />
       </Route>
     </>
   )

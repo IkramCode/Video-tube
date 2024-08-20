@@ -6,6 +6,7 @@ import {
   FaUserCog,
   FaSignOutAlt,
 } from "react-icons/fa";
+import { RiVideoUploadFill } from "react-icons/ri";
 import { Link } from "react-router-dom";
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -20,35 +21,44 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           &#10005;
         </button>
         <Link
-          to={'/dashboard'}
+          to={"/dashboard"}
           className="flex items-center text-lg px-3 py-2 rounded-lg hover:bg-gray-700 transition duration-300"
         >
           <FaTachometerAlt className="mr-3" />
           Dashboard
         </Link>
         <Link
-          to={'#'}
+          to={"/upload-a-video"}
+          className={
+            "flex items-center text-lg px-3 py-2 rounded-lg hover:bg-gray-700 transition duration-300"
+          }
+        >
+          <RiVideoUploadFill className="mr-3" />
+          Upload Video
+        </Link>
+        <Link
+          to={"#"}
           className="flex items-center text-lg px-3 py-2 rounded-lg hover:bg-gray-700 transition duration-300"
         >
           <FaListUl className="mr-3" />
           Playlist
         </Link>
         <Link
-          to={'#'}
+          to={"#"}
           className="flex items-center text-lg px-3 py-2 rounded-lg hover:bg-gray-700 transition duration-300"
         >
           <FaHistory className="mr-3" />
           Watch History
         </Link>
         <Link
-          to={'#'}
+          to={"#"}
           className="flex items-center text-lg px-3 py-2 rounded-lg hover:bg-gray-700 transition duration-300"
         >
           <FaUserCog className="mr-3" />
           User Settings
         </Link>
         <Link
-          to={'#'}
+          to={"#"}
           className="flex items-center text-lg px-3 py-2 rounded-lg hover:bg-red-600 transition duration-300"
         >
           <FaSignOutAlt className="mr-3" />
