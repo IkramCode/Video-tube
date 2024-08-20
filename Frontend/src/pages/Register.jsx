@@ -31,7 +31,7 @@ const Register = () => {
     console.log("formData", formData);
 
     try {
-      const response = await axiosInstance.post("/users/register", formData,);
+      const response = await axiosInstance.post("/users/register", formData);
       console.log("register response", response.data);
     } catch (error) {
       console.error(error);
@@ -41,15 +41,17 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full">
+        <h2 className="text-2xl font-bold mb-6 text-center text-white">
+          Register
+        </h2>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
-            <label className="block text-gray-700">Username</label>
+            <label className="block text-gray-400">Username</label>
             <input
               type="text"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-700 text-white focus:outline-none focus:border-blue-500"
               {...register("username", { required: "Username is required" })}
             />
             {errors.username && (
@@ -57,10 +59,10 @@ const Register = () => {
             )}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Full Name</label>
+            <label className="block text-gray-400">Full Name</label>
             <input
               type="text"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-700 text-white focus:outline-none focus:border-blue-500"
               {...register("fullName", { required: "Full name is required" })}
             />
             {errors.fullName && (
@@ -68,10 +70,10 @@ const Register = () => {
             )}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Email</label>
+            <label className="block text-gray-400">Email</label>
             <input
               type="email"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-700 text-white focus:outline-none focus:border-blue-500"
               {...register("email", { required: "Email is required" })}
             />
             {errors.email && (
@@ -79,10 +81,10 @@ const Register = () => {
             )}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Password</label>
+            <label className="block text-gray-400">Password</label>
             <input
               type="password"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-700 text-white focus:outline-none focus:border-blue-500"
               {...register("password", { required: "Password is required" })}
             />
             {errors.password && (
@@ -90,10 +92,10 @@ const Register = () => {
             )}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Cover Image</label>
+            <label className="block text-gray-400">Cover Image</label>
             <input
               type="file"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-700 text-white focus:outline-none focus:border-blue-500"
               {...register("coverImage")}
             />
             {errors.coverImage && (
@@ -103,10 +105,10 @@ const Register = () => {
             )}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Avatar</label>
+            <label className="block text-gray-400">Avatar</label>
             <input
               type="file"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-700 text-white focus:outline-none focus:border-blue-500"
               {...register("avatar")}
             />
             {errors.avatar && (
@@ -115,12 +117,15 @@ const Register = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+            className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200"
           >
             Register
           </button>
         </form>
-        <Link to="/login" className="text-blue-500 mt-4 block text-center">
+        <Link
+          to="/login"
+          className="text-blue-200 mt-4 block text-center hover:text-blue-500 transition duration-200"
+        >
           Already have an account? Login
         </Link>
       </div>

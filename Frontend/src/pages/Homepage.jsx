@@ -78,6 +78,20 @@ export default function Homepage() {
     };
   }, [loaderRef]);
 
+  const debounce = (func, delay) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => func(...args), delay);
+    };
+  };
+
+  const handleSearch = debounce((query) => {
+    setPage(1);
+    setVideos([]);
+    setQuery(query);
+  }, 500);
+
   return (
     <div className="p-4 bg-gray-800 min-h-screen">
       {user ? (
@@ -85,10 +99,9 @@ export default function Homepage() {
           <div className="mb-6 flex justify-center">
             <input
               type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
               placeholder="Search videos..."
               className="p-2 border border-gray-700 bg-gray-600 text-white rounded-lg w-full sm:w-1/2 lg:w-1/3 placeholder:text-gray-400"
+              onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

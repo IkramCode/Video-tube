@@ -72,10 +72,14 @@ export default function Dashboard() {
     fetchCurrentUser();
   }, [dispatch, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    dispatch(setUser(null));
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post("/users/logout");
+      dispatch(setUser(null));
+      navigate("/login");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   if (loading) {
