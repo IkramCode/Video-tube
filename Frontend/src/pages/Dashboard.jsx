@@ -20,6 +20,21 @@ export default function Dashboard() {
   const [selectedVideo, setSelectedVideo] = useState(null);
 
   useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await axiosInstance.get("/users/current-user");
+        dispatch(setUser(response.data.data));
+        console.log(response.data.data);
+      } catch (error) {
+        console.log(error);
+        navigate("/login");
+      }
+    };
+
+    fetchCurrentUser();
+  }, [dispatch, navigate]);
+
+  useEffect(() => {
     if (!user) {
       navigate("/login");
     } else {
@@ -79,7 +94,6 @@ export default function Dashboard() {
   const handleEdit = (id) => {
     navigate(`/edit-video/${id}`);
     console.log("Edit clicked", id);
-    
   };
 
   const handleDelete = (Videoid) => {

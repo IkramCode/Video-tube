@@ -5,10 +5,11 @@ import { useForm } from "react-hook-form";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Rings } from "react-loader-spinner";
-import { useSelector } from "react-redux";
-
+import { useSelector , useDispatch } from "react-redux";
+import { setUser } from "../Features/userSlice";
 export default function UpdateVideo() {
   const [error, setError] = useState(null);
+  const dispatch = useDispatch();
   const [isUpdating, setIsUpdating] = useState(false);
   const { videoId } = useParams();
   const navigate = useNavigate();
@@ -19,6 +20,22 @@ export default function UpdateVideo() {
     setValue,
   } = useForm();
   const { user } = useSelector((state) => state.user);
+  console.log("User:", user);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await axiosInstance.get("/users/current-user");
+        dispatch(setUser(response.data.data));
+        console.log(response.data.data);
+      } catch (error) {
+        console.log(error);
+        navigate("/login");
+      }
+    };
+
+    fetchCurrentUser();
+  }, [dispatch, navigate]);
 
   useEffect(() => {
     if (!user) {
